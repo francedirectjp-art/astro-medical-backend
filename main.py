@@ -2,10 +2,9 @@ import os
 import swisseph as swe
 
 # Vercel環境でSwiss Ephemerisのデータファイルパスを設定
-# /var/task/swe_data にデータファイルを配置することを想定
-data_path = '/var/task/swe_data'
-if os.path.exists(data_path):
-    swe.set_ephe_path(data_path)
+# /var/task/ はカレントディレクトリなので、相対パスで指定
+data_path = 'swe_data'
+swe.set_ephe_path(data_path)
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS

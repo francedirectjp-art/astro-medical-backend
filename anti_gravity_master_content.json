@@ -1,0 +1,993 @@
+{
+  "app_metadata": {
+    "title": "Strategic Life Navigation System",
+    "code_name": "Anti-Gravity",
+    "version": "1.0.0",
+    "description": "占星術人生経営戦略書 自動生成システム",
+    "target_total_characters": 50000,
+    "target_characters_per_step": 3000,
+    "language": "ja"
+  },
+
+  "system_settings": {
+    "role_definition": {
+      "persona": "MBAを持つ人生経営戦略コンサルタント",
+      "expertise": ["経営戦略", "組織論", "キャリア開発", "占星術"],
+      "tone": "論理的かつ文学的、翻訳調を避けた自然な日本語"
+    },
+    "language_protocol": {
+      "primary_language": "ja",
+      "avoid_unnecessary_english": true,
+      "katakana_reduction": {
+        "enabled": true,
+        "examples": {
+          "コミットメント": "決意",
+          "モチベーション": "動機",
+          "ポテンシャル": "潜在力",
+          "アジェンダ": "議題",
+          "インサイト": "洞察"
+        }
+      }
+    },
+    "writing_method": {
+      "name": "6ブロック執筆メソッド",
+      "blocks": [
+        {
+          "id": "theory",
+          "name_ja": "理論背景",
+          "name_en": "Theory",
+          "description": "天体のビジネス的意味、神話的背景",
+          "min_characters": 400,
+          "type": "static"
+        },
+        {
+          "id": "lecture",
+          "name_ja": "基礎講義",
+          "name_en": "Lecture",
+          "description": "サインとハウスの性質を詳細に講義",
+          "min_characters": 1000,
+          "type": "static"
+        },
+        {
+          "id": "analysis",
+          "name_ja": "配置分析",
+          "name_en": "Analysis",
+          "description": "サイン×ハウスの化学反応を深掘り",
+          "min_characters": 800,
+          "type": "dynamic"
+        },
+        {
+          "id": "symbol",
+          "name_ja": "深層読解",
+          "name_en": "Symbol",
+          "description": "サビアンシンボルの物語的翻訳",
+          "min_characters": 600,
+          "type": "dynamic"
+        },
+        {
+          "id": "scenario",
+          "name_ja": "シナリオ",
+          "name_en": "Scenario",
+          "description": "失敗/成功の物語（小説形式）",
+          "min_characters": 1000,
+          "type": "dynamic"
+        },
+        {
+          "id": "action",
+          "name_ja": "提言とワーク",
+          "name_en": "Action",
+          "description": "具体的行動指針、内省ワーク",
+          "min_characters": 300,
+          "type": "dynamic"
+        }
+      ]
+    },
+    "character_count_recovery": {
+      "min_threshold": 2500,
+      "max_threshold": 4000,
+      "recovery_prompt_under": "上記の内容に、具体的なエピソードや詳細な解説を500文字程度追加してください。",
+      "recovery_prompt_over": "上記の内容を3000文字程度に要約してください。重要なポイントを維持しながら簡潔にまとめてください。"
+    }
+  },
+
+  "astrological_elements": {
+    "planets": {
+      "sun": {"name_ja": "太陽", "business_role": "CEO（最高経営責任者）", "keywords": ["意志", "目的", "公的な顔"]},
+      "moon": {"name_ja": "月", "business_role": "CFO/CHRO", "keywords": ["感情", "本能", "私的な顔"]},
+      "mercury": {"name_ja": "水星", "business_role": "広報部長/情報システム部長", "keywords": ["知性", "コミュニケーション", "分析"]},
+      "venus": {"name_ja": "金星", "business_role": "ブランドマネージャー/人事部長", "keywords": ["美意識", "価値観", "人間関係"]},
+      "mars": {"name_ja": "火星", "business_role": "営業部長/事業推進部長", "keywords": ["行動力", "競争", "エネルギー"]},
+      "jupiter": {"name_ja": "木星", "business_role": "経営企画部長", "keywords": ["拡大", "幸運", "哲学"]},
+      "saturn": {"name_ja": "土星", "business_role": "監査役/リスク管理部長", "keywords": ["制限", "責任", "成熟"]},
+      "uranus": {"name_ja": "天王星", "business_role": "イノベーション担当役員", "keywords": ["変革", "独創性", "突発"]},
+      "neptune": {"name_ja": "海王星", "business_role": "ビジョナリー/クリエイティブディレクター", "keywords": ["直感", "夢想", "霊感"]},
+      "pluto": {"name_ja": "冥王星", "business_role": "M&A担当/構造改革責任者", "keywords": ["変容", "再生", "深層心理"]},
+      "chiron": {"name_ja": "カイロン", "business_role": "メンター/コーチ", "keywords": ["傷", "癒し", "教え"]},
+      "north_node": {"name_ja": "ドラゴンヘッド", "business_role": "中長期経営計画", "keywords": ["使命", "成長方向", "カルマ"]}
+    },
+    "signs": {
+      "aries": {"name_ja": "牡羊座", "element": "fire", "modality": "cardinal", "keywords": ["開拓", "勇気", "即断即決"]},
+      "taurus": {"name_ja": "牡牛座", "element": "earth", "modality": "fixed", "keywords": ["安定", "五感", "所有"]},
+      "gemini": {"name_ja": "双子座", "element": "air", "modality": "mutable", "keywords": ["知識", "多様性", "コミュニケーション"]},
+      "cancer": {"name_ja": "蟹座", "element": "water", "modality": "cardinal", "keywords": ["保護", "感情", "家庭"]},
+      "leo": {"name_ja": "獅子座", "element": "fire", "modality": "fixed", "keywords": ["創造", "自己表現", "リーダーシップ"]},
+      "virgo": {"name_ja": "乙女座", "element": "earth", "modality": "mutable", "keywords": ["分析", "奉仕", "完璧主義"]},
+      "libra": {"name_ja": "天秤座", "element": "air", "modality": "cardinal", "keywords": ["調和", "美", "パートナーシップ"]},
+      "scorpio": {"name_ja": "蠍座", "element": "water", "modality": "fixed", "keywords": ["深層", "変容", "秘密"]},
+      "sagittarius": {"name_ja": "射手座", "element": "fire", "modality": "mutable", "keywords": ["探求", "哲学", "冒険"]},
+      "capricorn": {"name_ja": "山羊座", "element": "earth", "modality": "cardinal", "keywords": ["達成", "権威", "構造"]},
+      "aquarius": {"name_ja": "水瓶座", "element": "air", "modality": "fixed", "keywords": ["革新", "人道", "独立"]},
+      "pisces": {"name_ja": "魚座", "element": "water", "modality": "mutable", "keywords": ["共感", "直感", "超越"]}
+    },
+    "houses": {
+      "1": {"name_ja": "第1ハウス", "theme": "自己/外見", "business_meaning": "企業イメージ、ブランドアイデンティティ"},
+      "2": {"name_ja": "第2ハウス", "theme": "財産/価値観", "business_meaning": "財務基盤、経営資源"},
+      "3": {"name_ja": "第3ハウス", "theme": "知性/コミュニケーション", "business_meaning": "情報戦略、マーケティング"},
+      "4": {"name_ja": "第4ハウス", "theme": "家庭/基盤", "business_meaning": "組織文化、基盤事業"},
+      "5": {"name_ja": "第5ハウス", "theme": "創造/喜び", "business_meaning": "新規事業、イノベーション"},
+      "6": {"name_ja": "第6ハウス", "theme": "労働/健康", "business_meaning": "オペレーション、業務効率"},
+      "7": {"name_ja": "第7ハウス", "theme": "対人/契約", "business_meaning": "パートナーシップ、M&A"},
+      "8": {"name_ja": "第8ハウス", "theme": "変容/共有資源", "business_meaning": "投資、借入、事業承継"},
+      "9": {"name_ja": "第9ハウス", "theme": "哲学/海外", "business_meaning": "海外展開、企業理念"},
+      "10": {"name_ja": "第10ハウス", "theme": "社会的地位/天職", "business_meaning": "経営戦略、社会的評価"},
+      "11": {"name_ja": "第11ハウス", "theme": "友人/目標", "business_meaning": "ネットワーク、長期ビジョン"},
+      "12": {"name_ja": "第12ハウス", "theme": "潜在意識/秘密", "business_meaning": "隠れた資産、潜在リスク"}
+    },
+    "aspects": {
+      "conjunction": {"name_ja": "合", "degree": 0, "orb": 8, "nature": "融合", "business_meaning": "部門統合、シナジー"},
+      "opposition": {"name_ja": "衝", "degree": 180, "orb": 8, "nature": "対立と補完", "business_meaning": "競合関係、緊張"},
+      "trine": {"name_ja": "三分", "degree": 120, "orb": 8, "nature": "調和", "business_meaning": "自然な協力関係"},
+      "square": {"name_ja": "矩", "degree": 90, "orb": 8, "nature": "緊張と成長", "business_meaning": "課題、成長機会"},
+      "sextile": {"name_ja": "六分", "degree": 60, "orb": 6, "nature": "機会", "business_meaning": "ビジネスチャンス"}
+    }
+  },
+
+  "sessions": [
+    {
+      "session_id": 1,
+      "title": "基盤スペック",
+      "description": "あなたという経営体の基本構造を分析します",
+      "steps": [
+        {
+          "step_id": "1-A",
+          "chapter_number": "序章・第1章",
+          "chapter_title": "はじめに / 4元素バランス分析",
+          "target_characters": 3500,
+          "static_content": {
+            "prologue": {
+              "title": "はじめに",
+              "text": "本書は、あなたの出生図（ネイタルチャート）を「人生経営の設計図」として読み解く試みです。\n\n占星術は、しばしば神秘主義や予言と混同されますが、本書ではそれを「経営資源の分析ツール」として活用します。企業経営において、自社の強み・弱みを把握するSWOT分析が必須であるように、人生経営においても自己の資質を客観的に把握することが不可欠です。\n\nあなたの出生図には、10の天体、12のサイン（星座）、12のハウス（活動領域）、そして数多くのアスペクト（天体間の角度）が記されています。これらは、いわばあなたという「会社」の組織図であり、各天体は特定の役割を担う「役員」や「部門長」として機能しています。\n\n本書では、MBAホルダーの人生経営戦略コンサルタントとして、あなたの出生図を詳細に分析し、約5万文字にわたる包括的な「経営戦略書」を提供いたします。"
+            },
+            "theory": {
+              "title": "【理論背景】4元素とは何か",
+              "text": "西洋占星術における4元素（火・地・風・水）は、古代ギリシャの哲学者エンペドクレスに遡る概念です。経営学の観点からは、これは「組織の行動特性」を4つのカテゴリーに分類するフレームワークと捉えることができます。\n\n● 火（Fire）のエネルギー\n役割：推進力、ビジョン、リーダーシップ\n経営機能：事業開発、新規市場開拓、組織のモチベーション維持\n過剰時：暴走、燃え尽き、独断専行\n不足時：推進力欠如、変革への抵抗\n\n● 地（Earth）のエネルギー\n役割：実務、安定、資源管理\n経営機能：財務管理、オペレーション、品質管理\n過剰時：保守的、変化への抵抗、リスク回避過多\n不足時：実行力欠如、計画倒れ\n\n● 風（Air）のエネルギー\n役割：知性、コミュニケーション、ネットワーク\n経営機能：マーケティング、広報、情報システム、人材開発\n過剰時：理論偏重、実行力不足、浮ついた判断\n不足時：情報不足、孤立、コミュニケーション障害\n\n● 水（Water）のエネルギー\n役割：直感、共感、深層理解\n経営機能：顧客理解、組織文化、危機管理（空気を読む力）\n過剰時：感情的判断、依存、境界線の曖昧さ\n不足時：共感力欠如、組織の一体感喪失"
+            },
+            "lecture": {
+              "title": "【基礎講義】4元素のバランスを読む",
+              "text": "出生図における4元素の分布は、10の主要天体（太陽、月、水星、金星、火星、木星、土星、天王星、海王星、冥王星）がどのサインに位置しているかによって決まります。\n\n各サインは以下の元素に属します：\n・火のサイン：牡羊座、獅子座、射手座\n・地のサイン：牡牛座、乙女座、山羊座\n・風のサイン：双子座、天秤座、水瓶座\n・水のサイン：蟹座、蠍座、魚座\n\n理想的なバランスは、4元素に均等に天体が分布している状態ですが、実際にはほとんどの人に偏りがあります。この偏りこそが、あなたの「経営スタイル」の特徴を形成しています。\n\n重要なのは、偏りを「欠点」として捉えるのではなく、「戦略的特性」として活用することです。例えば、火の要素が強い経営者は、新規事業の立ち上げに向いていますが、地の要素を持つパートナーや部下を配置することで、実行フェーズを補完できます。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "以下のユーザーの4元素バランスを分析し、経営スタイルの特徴と戦略的活用法を提案してください。",
+            "variables_required": ["fire_count", "earth_count", "air_count", "water_count", "dominant_element", "lacking_element"],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】あなたの4元素バランス",
+                "instruction": "火{fire_count}、地{earth_count}、風{air_count}、水{water_count}という分布から読み取れる経営特性を詳細に分析してください。優位な元素と不足する元素の両面から、具体的なビジネスシーンでの傾向を述べてください。",
+                "min_characters": 800
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】経営判断の分岐点",
+                "instruction": "この4元素バランスを持つ経営者が直面しうる「失敗シナリオ」と「成功シナリオ」を、それぞれ小説形式で描写してください。失敗シナリオは💀マーク、成功シナリオは✨マークで始めてください。",
+                "min_characters": 1000
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】元素バランスの最適化",
+                "instruction": "不足している元素を補うための具体的な行動指針を3つ提案してください。また、優位な元素を活かすための戦略も提示してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "1-B",
+          "chapter_number": "第2章・第3章",
+          "chapter_title": "3区分分析 / アングル（AC/MC/IC/DC）",
+          "target_characters": 3500,
+          "static_content": {
+            "theory_modality": {
+              "title": "【理論背景】3区分（モダリティ）とは",
+              "text": "3区分（活動宮・固定宮・柔軟宮）は、行動パターンと変化への対応スタイルを示します。これは企業経営における「事業ライフサイクル」への適性と対応します。\n\n● 活動宮（Cardinal）：牡羊座、蟹座、天秤座、山羊座\n経営スタイル：先発者優位戦略、市場創造型\n強み：スタートアップ、新規事業立ち上げ、変革のイニシアチブ\n課題：継続性、フォロースルー\n\n● 固定宮（Fixed）：牡牛座、獅子座、蠍座、水瓶座\n経営スタイル：差別化戦略、ブランド構築型\n強み：事業の深化、ブランド確立、組織の安定化\n課題：変化への対応、柔軟性\n\n● 柔軟宮（Mutable）：双子座、乙女座、射手座、魚座\n経営スタイル：適応戦略、ニッチ市場型\n強み：環境変化への対応、多角化、撤退判断\n課題：一貫性、核となる強みの確立"
+            },
+            "theory_angles": {
+              "title": "【理論背景】4つのアングル",
+              "text": "アングルは出生図の4つの基軸点であり、人生の根幹をなす領域を示します。\n\n● ASC（アセンダント）：東の地平線\n意味：第一印象、外見、世界への入り方\n経営的意味：企業イメージ、ブランドアイデンティティ、市場参入スタイル\n\n● MC（ミッドヘブン）：天頂\n意味：社会的到達点、キャリアの頂点、天職\n経営的意味：経営ビジョン、達成目標、社会的評価\n\n● IC（イムムコエリ）：天底\n意味：心理的基盤、ルーツ、私的な自己\n経営的意味：組織文化、創業精神、心理的安全性\n\n● DC（ディセンダント）：西の地平線\n意味：他者、パートナーシップ、投影\n経営的意味：ビジネスパートナー、顧客像、補完関係"
+            },
+            "lecture": {
+              "title": "【基礎講義】アングルの読み方",
+              "text": "アングルのサインは、そのサインの性質を人生の基軸領域に持ち込みます。例えば、ASCが牡羊座であれば、新しい環境に飛び込む勇気と即断即決のスタイルで世界と関わります。MCが山羊座であれば、社会的達成と権威の構築が人生の到達点となります。\n\nアングルは軸として対になっています。ASC-DC軸は「自己と他者」、MC-IC軸は「公的と私的」を表します。これらのバランスを理解することで、人生における主要なテーマと課題が見えてきます。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの3区分バランスとアングルを分析し、経営スタイルと人生の基軸を読み解いてください。",
+            "variables_required": ["cardinal_count", "fixed_count", "mutable_count", "asc_sign", "mc_sign", "ic_sign", "dc_sign", "asc_degree", "mc_degree"],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】3区分とアングルの統合分析",
+                "instruction": "3区分バランス（活動{cardinal_count}、固定{fixed_count}、柔軟{mutable_count}）とアングルのサイン配置から、経営者としての行動特性を分析してください。ASC({asc_sign})が示す市場参入スタイル、MC({mc_sign})が示す到達目標を具体的に述べてください。",
+                "min_characters": 800
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】ASCのサビアンシンボル",
+                "instruction": "ASCのサビアンシンボルを物語的に解釈し、この人の「世界との関わり方」の深層を読み解いてください。",
+                "min_characters": 500
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】人生の軸を活かす",
+                "instruction": "アングルの配置を活かした具体的なキャリア戦略と行動指針を提案してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "session_id": 2,
+      "title": "内なる経営チーム",
+      "description": "あなたの心の中の役員たちを紹介します",
+      "steps": [
+        {
+          "step_id": "2-A",
+          "chapter_number": "第4章",
+          "chapter_title": "経営陣：太陽と月",
+          "target_characters": 3500,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】太陽と月 ─ ライツの意味",
+              "text": "占星術において、太陽と月は「ライツ（発光体）」と呼ばれ、他の天体とは別格の扱いを受けます。\n\n● 太陽（The Sun）= CEO（最高経営責任者）\n役割：企業の「ビジョン」「経営理念」「対外的な公約」を決定する\n性質：意識的、能動的、父性、未来志向\n問い：「こうありたい」という意志は何か？\n\n● 月（The Moon）= CFO（最高財務責任者）兼 CHRO（最高人事責任者）\n役割：企業の「資金繰り（エネルギー）」と「社員の士気（感情）」を管理する\n性質：無意識的、受動的、母性、過去・現在志向\n問い：「こうしたい（好き/嫌い）」という本能は何か？\n\n理想的な経営とは、「太陽が掲げた困難なビジョンを、月が納得して支えている状態」です。太陽と月が調和している人は、「やりたいこと」と「できること」が一致しており、持続可能なエネルギーを発揮できます。一方、太陽と月が葛藤している人は、「頭ではわかっているのに、心がついていかない」という状態に陥りやすくなります。"
+            },
+            "lecture": {
+              "title": "【基礎講義】太陽と月のサイン・ハウス",
+              "text": "太陽のサインは「どのような理念を持った経営者か」を示し、太陽のハウスは「どの事業領域で輝くか」を示します。例えば、太陽が獅子座で5ハウスにある人は、創造的な自己表現の領域でリーダーシップを発揮する経営者像を持ちます。\n\n月のサインは「どのような感情的ニーズを持つか」を示し、月のハウスは「どの領域で安心を求めるか」を示します。例えば、月が蟹座で4ハウスにある人は、家庭的な環境と帰属意識を求め、組織においても「家族のような一体感」を重視します。\n\n太陽と月のアスペクト（角度関係）は、CEOとCFOの関係性を示します。調和的なアスペクト（トライン、セクスタイル）は協力関係を、緊張のアスペクト（スクエア、オポジション）は経営会議における対立を示唆します。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの太陽と月を分析し、内なるCEOとCFOの関係性を読み解いてください。",
+            "variables_required": [
+              "sun_sign", "sun_house", "sun_degree", "sun_sabian_degree", "sun_sabian_symbol",
+              "moon_sign", "moon_house", "moon_degree", "moon_sabian_degree", "moon_sabian_symbol",
+              "sun_moon_aspect", "sun_moon_aspect_orb"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】あなたのCEOとCFO",
+                "instruction": "太陽({sun_sign}・{sun_house}ハウス)と月({moon_sign}・{moon_house}ハウス)の配置から、この人の経営スタイルを分析してください。CEOのビジョンとCFOの感情的ニーズの関係性、{sun_moon_aspect}というアスペクトが経営にもたらす影響を詳述してください。",
+                "min_characters": 800
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】太陽と月のサビアンシンボル",
+                "instruction": "太陽のサビアンシンボル「{sun_sabian_symbol}」と月のサビアンシンボル「{moon_sabian_symbol}」を物語的に解釈し、CEOの真の使命とCFOの深層ニーズを読み解いてください。",
+                "min_characters": 600
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】太陽と月の対話",
+                "instruction": "この人の太陽（CEO）と月（CFO）が経営会議で対話している様子を、小説形式で描写してください。葛藤がある場合はその克服過程も含めてください。",
+                "min_characters": 800
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】太陽と月の統合",
+                "instruction": "太陽と月を統合するための日常的なルーチンやワークを具体的に提案してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "2-B",
+          "chapter_number": "第5章",
+          "chapter_title": "実務部隊：水星・金星・火星",
+          "target_characters": 3500,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】個人天体の役割",
+              "text": "水星・金星・火星は「個人天体」と呼ばれ、日常的な活動に直接関わる機能を担います。\n\n● 水星（Mercury）= 広報部長 / 情報システム部長\n役割：情報の収集・分析・発信、コミュニケーション戦略\n管轄：言語能力、論理思考、学習スタイル、ビジネスコミュニケーション\n\n● 金星（Venus）= ブランドマネージャー / 人事部長\n役割：価値の創造と評価、人間関係の構築、美意識の統括\n管轄：審美眼、人材の魅力評価、報酬設計、企業文化の醸成\n\n● 火星（Mars）= 営業部長 / 事業推進部長\n役割：目標達成のための行動力、競争における戦略実行\n管轄：実行力、競争心、リスクテイク、トラブルシューティング"
+            },
+            "lecture": {
+              "title": "【基礎講義】実務部隊の連携",
+              "text": "水星は「どう考え、どう伝えるか」、金星は「何を価値とし、どう関係を築くか」、火星は「どう行動し、どう戦うか」を示します。この3つが連携することで、ビジネスにおける日常業務が遂行されます。\n\n例えば、新規顧客への営業プロセスを考えてみましょう。水星が市場分析とプレゼン資料を作成し、金星が顧客との信頼関係を構築し、火星がクロージングに向けて粘り強く交渉します。3つの天体がうまく機能することで、成果につながります。\n\nこれらの天体のサインとハウスを分析することで、あなたの「仕事の進め方」の特徴が明らかになります。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの水星・金星・火星を分析し、実務遂行スタイルを読み解いてください。",
+            "variables_required": [
+              "mercury_sign", "mercury_house", "mercury_sabian_symbol", "mercury_retrograde",
+              "venus_sign", "venus_house", "venus_sabian_symbol", "venus_retrograde",
+              "mars_sign", "mars_house", "mars_sabian_symbol", "mars_retrograde"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】実務部隊の特性",
+                "instruction": "水星({mercury_sign}・{mercury_house}ハウス)、金星({venus_sign}・{venus_house}ハウス)、火星({mars_sign}・{mars_house}ハウス)の配置から、この人の仕事スタイルを分析してください。逆行がある場合はその影響も含めてください。",
+                "min_characters": 900
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】3天体のサビアンシンボル",
+                "instruction": "水星「{mercury_sabian_symbol}」、金星「{venus_sabian_symbol}」、火星「{mars_sabian_symbol}」のサビアンシンボルを統合的に解釈し、この人の実務における深層テーマを読み解いてください。",
+                "min_characters": 600
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】プロジェクトの現場",
+                "instruction": "この人がプロジェクトリーダーとして活動する様子を、水星・金星・火星の特性を活かした成功シナリオとして描写してください。",
+                "min_characters": 700
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】実務力の最大化",
+                "instruction": "水星・金星・火星を最大限に活かすための具体的な行動指針を提案してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "session_id": 3,
+      "title": "社会との関わり",
+      "description": "社会的成功と変革のエネルギーを読み解きます",
+      "steps": [
+        {
+          "step_id": "3-A",
+          "chapter_number": "第6章",
+          "chapter_title": "拡大と管理：木星と土星",
+          "target_characters": 3500,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】社会天体の役割",
+              "text": "木星と土星は「社会天体」と呼ばれ、個人を超えた社会との関わりを示します。\n\n● 木星（Jupiter）= 経営企画部長 / CSR担当\n役割：事業拡大の方向性、成長戦略、社会的意義の追求\n象徴：拡大、幸運、哲学、寛容、過剰\n周期：約12年で黄道を一周（年齢域35-45歳）\n\n● 土星（Saturn）= 監査役 / リスク管理部長\n役割：規律の維持、リスクの特定、長期的な構造の構築\n象徴：制限、責任、成熟、恐怖、権威\n周期：約29.5年で黄道を一周（年齢域55-70歳）\n\n木星と土星は対照的な機能を持ちます。木星が「もっと拡大しよう」と提案すれば、土星は「リスクを検討しよう」と制止します。この2つのバランスが、持続可能な成長を可能にします。"
+            },
+            "lecture": {
+              "title": "【基礎講義】木星と土星のサイクル",
+              "text": "木星は約12年で黄道を一周するため、各サインに約1年滞在します。木星が出生時の太陽に回帰する「木星リターン」は12歳、24歳、36歳、48歳などで起こり、成長と拡大の機会をもたらします。\n\n土星は約29.5年で黄道を一周するため、各サインに約2.5年滞在します。土星が出生時の位置に戻る「サターンリターン」は29歳頃と58歳頃に起こり、人生の構造的な見直しを促します。特に最初のサターンリターン（29歳頃）は、「大人としての責任」を引き受ける重要な転機となります。\n\n出生図における木星と土星のサインとハウスは、どの領域で成長を求め、どの領域で制限を経験するかを示します。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの木星と土星を分析し、社会的成功と課題のパターンを読み解いてください。",
+            "variables_required": [
+              "jupiter_sign", "jupiter_house", "jupiter_sabian_symbol", "jupiter_retrograde",
+              "saturn_sign", "saturn_house", "saturn_sabian_symbol", "saturn_retrograde",
+              "jupiter_saturn_aspect"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】成長戦略とリスク管理",
+                "instruction": "木星({jupiter_sign}・{jupiter_house}ハウス)と土星({saturn_sign}・{saturn_house}ハウス)の配置から、この人の社会的成功パターンと課題を分析してください。木星土星間のアスペクト({jupiter_saturn_aspect})の影響も含めてください。",
+                "min_characters": 800
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】木星と土星のサビアンシンボル",
+                "instruction": "木星「{jupiter_sabian_symbol}」と土星「{saturn_sabian_symbol}」のサビアンシンボルから、社会的使命と乗り越えるべき壁を読み解いてください。",
+                "min_characters": 600
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】社会との対峙",
+                "instruction": "この人が社会的な成功を収める過程を、木星の拡大と土星の試練を織り交ぜた物語として描写してください。",
+                "min_characters": 800
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】社会的成長の道筋",
+                "instruction": "木星の恩恵を受け取り、土星の課題を乗り越えるための具体的な行動指針を提案してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "3-B",
+          "chapter_number": "第7章",
+          "chapter_title": "変革者：天王星・海王星・冥王星",
+          "target_characters": 3500,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】トランスサタニアンの意味",
+              "text": "天王星・海王星・冥王星は「トランスサタニアン（土星外惑星）」と呼ばれ、世代的・集合的なテーマを示します。これらは個人のコントロールを超えた、時代の潮流や深層心理に関わる力です。\n\n● 天王星（Uranus）= イノベーション担当役員\n役割：既存の枠組みを破壊し、新しいパラダイムを創造する\n象徴：変革、独創性、突発、反逆、テクノロジー\n周期：約84年（各サインに約7年滞在）\n\n● 海王星（Neptune）= ビジョナリー / クリエイティブディレクター\n役割：理想を描き、現実を超えた可能性を示す\n象徴：直感、夢想、芸術、霊感、曖昧さ、幻惑\n周期：約165年（各サインに約14年滞在）\n\n● 冥王星（Pluto）= M&A担当 / 構造改革責任者\n役割：根本的な変容を促し、古い構造を破壊して再生する\n象徴：死と再生、深層心理、権力、執着、強制的変化\n周期：約248年（各サインに12〜32年滞在）"
+            },
+            "lecture": {
+              "title": "【基礎講義】世代天体の読み方",
+              "text": "トランスサタニアンは同世代で共通のサインを持つため、サインよりもハウスの配置が個人的な意味を持ちます。また、個人天体（太陽、月、水星、金星、火星）とのアスペクトがある場合、その世代的テーマが個人の人生に強く影響します。\n\n例えば、冥王星が太陽とコンジャンクション（合）の人は、人生において「死と再生」のテーマを個人的に経験しやすくなります。天王星が月とスクエア（矩）の人は、感情面で予期せぬ変動を経験しやすい傾向があります。\n\nこれらの天体は、個人の意志でコントロールできるものではなく、「時代の風」や「無意識からの力」として経験されます。重要なのは、これらの力に抵抗するのではなく、その方向性を理解し、波に乗ることです。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーのトランスサタニアンを分析し、世代的テーマと変革のエネルギーを読み解いてください。",
+            "variables_required": [
+              "uranus_sign", "uranus_house", "uranus_sabian_symbol",
+              "neptune_sign", "neptune_house", "neptune_sabian_symbol",
+              "pluto_sign", "pluto_house", "pluto_sabian_symbol",
+              "outer_planet_aspects_to_personal"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】時代の変革者として",
+                "instruction": "天王星({uranus_sign}・{uranus_house}ハウス)、海王星({neptune_sign}・{neptune_house}ハウス)、冥王星({pluto_sign}・{pluto_house}ハウス)の配置から、この人が担う世代的テーマと個人的な変革のエネルギーを分析してください。個人天体とのアスペクトがある場合は特に詳しく述べてください。",
+                "min_characters": 900
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】変革のサビアンシンボル",
+                "instruction": "トランスサタニアンのサビアンシンボルから、この人が関わる集合的・時代的テーマを読み解いてください。",
+                "min_characters": 500
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】変革の波に乗る",
+                "instruction": "この人がトランスサタニアンのエネルギーを建設的に活かし、変革を成し遂げる物語を描写してください。",
+                "min_characters": 700
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】変革との付き合い方",
+                "instruction": "トランスサタニアンのエネルギーを味方につけるための心構えと行動指針を提案してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "session_id": 4,
+      "title": "独自の物語",
+      "description": "あなただけの人生テーマを紐解きます",
+      "steps": [
+        {
+          "step_id": "4-A",
+          "chapter_number": "第8章",
+          "chapter_title": "葛藤の統合：アスペクト分析",
+          "target_characters": 3500,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】アスペクトとは何か",
+              "text": "アスペクトとは、出生図における天体間の角度関係です。これは「役員同士の関係性」を示し、協力・緊張・無関心などの様々なパターンを生み出します。\n\n● メジャーアスペクト\n・合（コンジャンクション）0°：融合、統合、強調\n・衝（オポジション）180°：対立、補完、緊張と認識\n・三分（トライン）120°：調和、自然な流れ、才能\n・矩（スクエア）90°：摩擦、課題、成長のための緊張\n・六分（セクスタイル）60°：機会、穏やかな協力\n\nアスペクトには「ソフト（調和）」と「ハード（緊張）」があります。ソフトアスペクト（トライン、セクスタイル）は自然に流れるエネルギーを示し、ハードアスペクト（スクエア、オポジション）は努力を要する領域を示します。ただし、ハードアスペクトが悪いわけではありません。それは成長の原動力となり、しばしば最大の強みを生み出します。"
+            },
+            "lecture": {
+              "title": "【基礎講義】アスペクトパターン",
+              "text": "複数のアスペクトが組み合わさると「アスペクトパターン」を形成し、より複雑な人格的テーマを示します。\n\n● グランドトライン：3つの天体が120°ずつで三角形を形成\n意味：特定の元素における才能、自然な流れ、時に怠惰\n\n● Tスクエア：2つの天体がオポジションし、第3の天体が両方にスクエア\n意味：人生の主要な課題、成長のための継続的緊張\n\n● グランドクロス：4つの天体が90°ずつで十字を形成\n意味：四方からの圧力、複雑な課題、大きな成長可能性\n\n● ヨッド（神の指）：2つの天体が60°、第3の天体が両方に150°\n意味：宿命的な使命感、調整が必要な特殊な才能\n\nこれらのパターンを理解することで、人生における主要なテーマと課題が明確になります。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの主要なアスペクトとアスペクトパターンを分析し、人生の葛藤と統合のテーマを読み解いてください。",
+            "variables_required": [
+              "major_aspects",
+              "aspect_patterns",
+              "strongest_aspect",
+              "challenging_aspects"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】天体間の関係性マップ",
+                "instruction": "主要なアスペクト配置から、この人の内的な力学を分析してください。特に強いアスペクト（{strongest_aspect}）と挑戦的なアスペクト（{challenging_aspects}）に焦点を当ててください。アスペクトパターンがある場合は、その統合的な意味を詳述してください。",
+                "min_characters": 900
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】葛藤の深層テーマ",
+                "instruction": "最も挑戦的なアスペクトが示す深層的な人生テーマを、象徴的に読み解いてください。",
+                "min_characters": 500
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】葛藤から統合へ",
+                "instruction": "この人が主要なアスペクトの葛藤を経験し、やがて統合に至る物語を描写してください。💀失敗パターンと✨成功パターンの両方を含めてください。",
+                "min_characters": 800
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】統合への道",
+                "instruction": "アスペクトの緊張を建設的に活かすための具体的な行動指針とワークを提案してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "4-B",
+          "chapter_number": "第9章-1",
+          "chapter_title": "ニッチ戦略：カイロン",
+          "target_characters": 3000,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】カイロン ─ 傷ついた癒し手",
+              "text": "カイロン（Chiron）は、土星と天王星の間を周回する小惑星です。ギリシャ神話では、不死の身でありながら癒えない傷を負ったケンタウロスの賢者として描かれます。\n\n● カイロン = メンター / エグゼクティブコーチ\n役割：自らの傷を通じて他者を導く、経験に基づく知恵の提供\n象徴：傷、癒し、教え、橋渡し、ニッチな専門性\n周期：約50年（各サインに1.5〜8年滞在、軌道が楕円形のため不均等）\n\nカイロンが示す「傷」は、単なる弱点ではありません。それは「他者を助ける力の源泉」となります。自分が苦しんだ領域だからこそ、同じ苦しみを持つ人に寄り添い、導くことができるのです。ビジネスにおいては、これは「ニッチ戦略」の発見につながります。"
+            },
+            "lecture": {
+              "title": "【基礎講義】カイロンのサインとハウス",
+              "text": "カイロンのサインは「どのような傷を負っているか」を示し、ハウスは「人生のどの領域でその傷が顕在化するか」を示します。\n\n例えば、カイロンが牡羊座にある人は「自己主張」や「存在意義」に関する傷を持ちます。「自分には価値がない」「主張する資格がない」という無意識の信念を抱えやすくなります。しかし、この傷を認識し、向き合うことで、同じ傷を持つ人を助ける「自己肯定感の専門家」になれる可能性があります。\n\nカイロンのハウスが10ハウス（キャリア）であれば、仕事や社会的地位に関する領域でこの傷が顕在化し、同時にその領域での癒し手となる可能性を示します。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーのカイロンを分析し、傷と癒しのテーマ、およびニッチ戦略の可能性を読み解いてください。",
+            "variables_required": [
+              "chiron_sign", "chiron_house", "chiron_sabian_symbol",
+              "chiron_aspects"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】あなたの傷と癒しの力",
+                "instruction": "カイロン({chiron_sign}・{chiron_house}ハウス)の配置から、この人が抱える傷のテーマと、それを癒しの力に変換する可能性を分析してください。他の天体とのアスペクトがある場合はその影響も含めてください。",
+                "min_characters": 700
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】カイロンのサビアンシンボル",
+                "instruction": "カイロンのサビアンシンボル「{chiron_sabian_symbol}」から、傷の深層的な意味と癒しへの道筋を読み解いてください。",
+                "min_characters": 500
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】傷から使命へ",
+                "instruction": "この人がカイロンの傷と向き合い、やがてそれを他者を助ける力に変えていく物語を描写してください。",
+                "min_characters": 600
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】ニッチ戦略の発見",
+                "instruction": "カイロンの傷を「ニッチ戦略」として活かすための具体的な方向性を提案してください。",
+                "min_characters": 300
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "4-C",
+          "chapter_number": "第9章-2",
+          "chapter_title": "使命：ドラゴンヘッド",
+          "target_characters": 3000,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】ドラゴンヘッドとドラゴンテイル",
+              "text": "ドラゴンヘッド（ノースノード）とドラゴンテイル（サウスノード）は、月の軌道と黄道の交点です。実在の天体ではなく「計算点」ですが、占星術では非常に重要視されます。\n\n● ドラゴンヘッド（North Node）= 中長期経営計画\n意味：今生での成長方向、目指すべき未知の領域\n象徴：使命、成長、不慣れだが報われる方向\n\n● ドラゴンテイル（South Node）= 過去の成功体験\n意味：前世からの持ち越し（比喩的に）、すでに習熟した領域\n象徴：才能、慣れ、安住しがちな領域\n\nドラゴンヘッドとテイルは常に180°の関係にあり、「慣れ親しんだ過去（テイル）」から「未知の成長方向（ヘッド）」へ向かう人生の軸を形成します。テイルの才能を完全に捨てるのではなく、それを土台としてヘッドの方向に成長していくことが、ノード軸の活用法です。"
+            },
+            "lecture": {
+              "title": "【基礎講義】ノード軸の読み方",
+              "text": "ドラゴンヘッドのサインは「成長の方向性」を示し、ハウスは「成長が求められる人生領域」を示します。\n\n例えば、ドラゴンヘッドが牡羊座で1ハウスにある人は、「自己主張」「独立」「リーダーシップ」という方向に成長することが求められます。一方、テイルは天秤座で7ハウスにあり、「協調」「パートナーシップ」「他者への配慮」は既に得意な領域です。\n\nこの人は、他者との調和を大切にする才能（テイル）を持ちながらも、時に自己主張し、独立して行動すること（ヘッド）に挑戦することで、人生の成長を遂げます。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーのドラゴンヘッド/テイルを分析し、人生の使命と成長方向を読み解いてください。",
+            "variables_required": [
+              "north_node_sign", "north_node_house", "north_node_sabian_symbol",
+              "south_node_sign", "south_node_house",
+              "node_aspects"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】使命と才能のバランス",
+                "instruction": "ドラゴンヘッド({north_node_sign}・{north_node_house}ハウス)とドラゴンテイル({south_node_sign}・{south_node_house}ハウス)の配置から、この人の人生の成長軸を分析してください。テイルの才能をどのようにヘッドの方向に活かすべきかを具体的に述べてください。",
+                "min_characters": 700
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】ドラゴンヘッドのサビアンシンボル",
+                "instruction": "ドラゴンヘッドのサビアンシンボル「{north_node_sabian_symbol}」から、この人の使命の深層的な意味を読み解いてください。",
+                "min_characters": 500
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】使命への覚醒",
+                "instruction": "この人がドラゴンテイルの安住地帯から踏み出し、ドラゴンヘッドの方向に成長していく物語を描写してください。",
+                "min_characters": 600
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】使命を生きる",
+                "instruction": "ドラゴンヘッドの方向に日常的に成長するための具体的な行動指針を提案してください。",
+                "min_characters": 300
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "session_id": 5,
+      "title": "ビジネスモデル",
+      "description": "収入・労働・天職の3領域を詳細分析します",
+      "steps": [
+        {
+          "step_id": "5-A",
+          "chapter_number": "第10章-1",
+          "chapter_title": "財源：2ハウス詳細分析",
+          "target_characters": 3000,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】2ハウスの意味",
+              "text": "2ハウスは「所有」「財産」「自己価値」を司るハウスです。ビジネスの観点からは、収入源、経営資源、そして自己評価の基盤を示します。\n\n● 2ハウスの経営的意味\n・収入の獲得方法と収入源の性質\n・経営資源（ヒト・モノ・カネ・情報）の扱い方\n・自己の市場価値の認識\n・何に対して対価を払い、何から対価を得るか\n\n2ハウスのカスプ（始まりの度数）のサインは、収入獲得の基本スタイルを示します。2ハウス内の天体は、その領域で活躍する「担当者」を示します。天体がない場合は、カスプのサインの支配星（ルーラー）がその役割を代行します。"
+            },
+            "lecture": {
+              "title": "【基礎講義】2ハウスの詳細分析法",
+              "text": "2ハウスの分析では、以下の要素を総合的に検討します。\n\n1. 2ハウスカスプのサイン\n収入獲得の基本スタイル。例えば、牡牛座なら安定収入志向、射手座なら多角的・国際的な収入源。\n\n2. 2ハウス内の天体\n収入に直接関わる機能。太陽があれば収入が自己実現に直結、土星があれば収入に時間と努力を要する。\n\n3. 2ハウスルーラーの位置\nカスプのサインの支配星がどのハウスにあるかで、収入源との関連領域がわかる。\n\n4. 2ハウスへのアスペクト\n他の天体からの影響で、収入に関する支援や課題が見える。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの2ハウスを詳細分析し、収入戦略を読み解いてください。",
+            "variables_required": [
+              "second_house_cusp_sign", "second_house_planets", "second_house_ruler",
+              "second_house_ruler_sign", "second_house_ruler_house",
+              "second_house_aspects"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】あなたの収入ポートフォリオ",
+                "instruction": "2ハウス({second_house_cusp_sign})の配置と内部の天体、ルーラーの位置から、この人の収入獲得パターンと経済的価値観を分析してください。",
+                "min_characters": 700
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】2ハウスカスプのサビアンシンボル",
+                "instruction": "2ハウスカスプのサビアンシンボルから、収入と自己価値に関する深層テーマを読み解いてください。",
+                "min_characters": 400
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】財務戦略の成功",
+                "instruction": "この人が2ハウスの特性を活かして経済的成功を収める物語を描写してください。",
+                "min_characters": 600
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】収入最大化戦略",
+                "instruction": "2ハウスの配置を活かした具体的な収入戦略を提案してください。",
+                "min_characters": 300
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "5-B",
+          "chapter_number": "第10章-2",
+          "chapter_title": "働き方：6ハウス詳細分析",
+          "target_characters": 3000,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】6ハウスの意味",
+              "text": "6ハウスは「労働」「奉仕」「健康」「日常のルーティン」を司るハウスです。ビジネスの観点からは、業務遂行スタイル、職場環境への適応、そして心身の健康管理を示します。\n\n● 6ハウスの経営的意味\n・日常業務の遂行スタイル\n・雇用関係と部下/同僚との関係\n・業務効率化と品質管理\n・仕事と健康のバランス\n\n6ハウスは「2ハウス（収入）」と「10ハウス（天職）」の橋渡しとなる領域です。2ハウスが「何を稼ぐか」、10ハウスが「何を成し遂げるか」を示すのに対し、6ハウスは「どのように働くか」を示します。"
+            },
+            "lecture": {
+              "title": "【基礎講義】6ハウスの詳細分析法",
+              "text": "6ハウスの分析では、以下の要素を検討します。\n\n1. 6ハウスカスプのサイン\n働き方の基本スタイル。例えば、乙女座なら細部へのこだわり、水瓶座なら革新的な業務改善。\n\n2. 6ハウス内の天体\n労働に直接関わる機能。火星があれば精力的な働き方、海王星があれば創造的だが境界線が曖昧になりやすい。\n\n3. 健康との関連\n6ハウスは身体的健康も示します。過労傾向や、特定のストレス反応パターンが読み取れます。\n\n4. 職場環境への適応\nどのような職場環境で最もパフォーマンスを発揮できるかがわかります。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの6ハウスを詳細分析し、最適な働き方を読み解いてください。",
+            "variables_required": [
+              "sixth_house_cusp_sign", "sixth_house_planets", "sixth_house_ruler",
+              "sixth_house_ruler_sign", "sixth_house_ruler_house",
+              "sixth_house_aspects"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】あなたの業務遂行スタイル",
+                "instruction": "6ハウス({sixth_house_cusp_sign})の配置から、この人の働き方と職場環境への適応パターンを分析してください。健康管理との関連も含めてください。",
+                "min_characters": 700
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】6ハウスカスプのサビアンシンボル",
+                "instruction": "6ハウスカスプのサビアンシンボルから、労働と奉仕に関する深層テーマを読み解いてください。",
+                "min_characters": 400
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】理想の職場",
+                "instruction": "この人が6ハウスの特性を活かして充実した職業生活を送る様子を描写してください。",
+                "min_characters": 600
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】働き方改革",
+                "instruction": "6ハウスの配置を活かした具体的な働き方の改善策を提案してください。",
+                "min_characters": 300
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "5-C",
+          "chapter_number": "第10章-3",
+          "chapter_title": "天職：10ハウス詳細分析",
+          "target_characters": 3000,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】10ハウスとMCの意味",
+              "text": "10ハウス（MC周辺）は「社会的地位」「キャリア」「天職」「社会的評価」を司る、出生図における最も高い位置にあるハウスです。\n\n● 10ハウスの経営的意味\n・社会的達成の方向性\n・キャリアの頂点と到達目標\n・世間からの評価と認識\n・権威と責任の領域\n\nMC（ミッドヘブン）は10ハウスのカスプであり、「人生の天頂」を象徴します。太陽が「自分が思う自分」を示すのに対し、MCは「社会が認める自分」を示します。この2つが一致している人は、公私にわたって一貫した人生を歩めます。"
+            },
+            "lecture": {
+              "title": "【基礎講義】10ハウスの詳細分析法",
+              "text": "10ハウスの分析では、以下の要素を総合的に検討します。\n\n1. MC（10ハウスカスプ）のサイン\nキャリアの方向性と社会的役割。例えば、MCが獅子座なら創造的リーダーシップ、山羊座なら伝統的な組織での昇進。\n\n2. 10ハウス内の天体\nキャリアに直接関わる機能。太陽があればキャリアが人生の中心、冥王星があれば権力と変革に関わる。\n\n3. MCルーラーの位置\nキャリアの成功がどの人生領域と結びついているかを示す。\n\n4. MCへのアスペクト\n他の天体からの支援や課題がキャリアに影響する。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "ユーザーの10ハウスとMCを詳細分析し、天職の方向性を読み解いてください。",
+            "variables_required": [
+              "mc_sign", "mc_degree", "mc_sabian_symbol",
+              "tenth_house_planets", "mc_ruler", "mc_ruler_sign", "mc_ruler_house",
+              "mc_aspects"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】あなたの天職と社会的使命",
+                "instruction": "MC({mc_sign})と10ハウスの配置から、この人の天職の方向性と社会的達成の形を分析してください。MCルーラーの位置とアスペクトも考慮してください。",
+                "min_characters": 800
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】MCのサビアンシンボル",
+                "instruction": "MCのサビアンシンボル「{mc_sabian_symbol}」から、この人の社会的使命の深層的な意味を読み解いてください。",
+                "min_characters": 500
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】天職の実現",
+                "instruction": "この人がMCの方向性に沿ってキャリアを築き、社会的成功を収める物語を描写してください。",
+                "min_characters": 600
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】キャリアビジョン",
+                "instruction": "10ハウスの配置を活かした具体的なキャリア戦略を提案してください。",
+                "min_characters": 300
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "session_id": 6,
+      "title": "未来予測",
+      "description": "時間軸で人生の展開を読み解きます",
+      "steps": [
+        {
+          "step_id": "6-A",
+          "chapter_number": "第12章",
+          "chapter_title": "体内時計：プログレス分析",
+          "target_characters": 3500,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】プログレス法とは",
+              "text": "プログレス法（進行法）は、出生図を時間軸で展開させる予測技法です。最も一般的な「セカンダリー・プログレッション」では、「出生後1日 = 人生の1年」という象徴的対応を用います。\n\n● プログレスの経営的意味\n・内的な成熟と変化のタイミング\n・人生のステージ移行\n・潜在的な転機の時期\n\nプログレスは「内的な時計」を表し、外的な出来事（トランジット）とは異なり、心理的な成熟や価値観の変化を示します。プログレスの太陽がサインを移行する時期（約30年ごと）は、人生観の大きな転換期となります。"
+            },
+            "lecture": {
+              "title": "【基礎講義】プログレスの読み方",
+              "text": "プログレス分析で特に重要なのは以下の要素です。\n\n1. プログレスの太陽（P-太陽）\n1年に約1度進む。サイン移行は人生観の転換、ハウス移行は注力領域の変化。\n\n2. プログレスの月（P-月）\n約1ヶ月に1度進み、約27.5年で黄道を一周。感情的フォーカスの移り変わりを示す。\n\n3. プログレスのアングル\n特にP-ASCとP-MCは、自己イメージとキャリアの変化を示す。\n\n4. プログレス天体のネイタル天体へのアスペクト\n内的な変化が外的な人生テーマと交差する時期を示す。\n\n※注意：プログレスの計算にはSwiss Ephemerisを使用し、AIは計算済みのデータに基づいて解釈のみを行います。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "事前計算されたプログレスデータに基づき、ユーザーの現在の内的成熟段階と今後の展開を解釈してください。",
+            "variables_required": [
+              "progressed_sun_sign", "progressed_sun_house", "progressed_sun_degree",
+              "progressed_moon_sign", "progressed_moon_house", "progressed_moon_degree",
+              "progressed_aspects_to_natal",
+              "upcoming_progressed_events"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】現在の内的ステージ",
+                "instruction": "P-太陽({progressed_sun_sign}・{progressed_sun_house}ハウス)とP-月({progressed_moon_sign}・{progressed_moon_house}ハウス)の現在位置から、この人の内的成熟段階を分析してください。",
+                "min_characters": 700
+              },
+              {
+                "block": "symbol",
+                "title": "【深層読解】プログレス太陽のサビアンシンボル",
+                "instruction": "現在のP-太陽の度数に対応するサビアンシンボルから、今のテーマを読み解いてください。",
+                "min_characters": 500
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】内的進化の物語",
+                "instruction": "この人のプログレスが示す今後3年間の内的変化を、物語形式で描写してください。{upcoming_progressed_events}の影響を含めてください。",
+                "min_characters": 800
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】内的成長の活用",
+                "instruction": "現在のプログレス配置を活かすための心構えと具体的な行動を提案してください。",
+                "min_characters": 400
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "6-B",
+          "chapter_number": "第13・14章",
+          "chapter_title": "3ヵ年計画：トランジット分析",
+          "target_characters": 4000,
+          "static_content": {
+            "theory": {
+              "title": "【理論背景】トランジット法とは",
+              "text": "トランジット法は、現在（または未来）の天体位置が出生図にどのような影響を与えるかを分析する予測技法です。\n\n● トランジットの経営的意味\n・外的環境の変化と機会\n・社会的な追い風/向かい風\n・アクションを起こすべきタイミング\n\nトランジットは「外的な天気予報」のようなものです。晴れの日もあれば嵐の日もありますが、予報を知っていれば適切な準備ができます。土星のトランジットは試練と成熟、木星のトランジットは拡大と幸運、冥王星のトランジットは根本的変容をもたらします。"
+            },
+            "lecture": {
+              "title": "【基礎講義】トランジットの読み方",
+              "text": "トランジット分析で特に重要なのは以下の要素です。\n\n1. 遅い天体（土星〜冥王星）のトランジット\n長期的な人生テーマの変化。特に出生図の太陽、月、アングルへのアスペクト形成時期は重要。\n\n2. 木星のトランジット\n約12年で黄道を一周。各ハウスを通過する約1年間、そのハウスのテーマに拡大と幸運がもたらされる。\n\n3. 土星のトランジット\n約29.5年で黄道を一周。各ハウスを通過する約2.5年間、そのハウスのテーマに試練と成熟がもたらされる。\n\n4. 食（日食・月食）\n出生図の天体やアングル付近で起こる食は、そのテーマに関する大きな転機を示す。\n\n※注意：トランジットの計算にはSwiss Ephemerisを使用し、AIは計算済みのデータに基づいて解釈のみを行います。日付は事前に計算されたものを使用してください。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "事前計算されたトランジットデータに基づき、今後3年間の展望を年度別に解釈してください。日付の計算は行わず、提供されたデータのみを使用してください。",
+            "variables_required": [
+              "transit_year1_events",
+              "transit_year2_events",
+              "transit_year3_events",
+              "major_transit_aspects",
+              "eclipse_impacts"
+            ],
+            "output_structure": [
+              {
+                "block": "analysis",
+                "title": "【配置分析】3ヵ年の天体動向",
+                "instruction": "今後3年間の主要なトランジットイベントを概観し、それぞれの年の基調を分析してください。提供されたデータに基づき、具体的な時期と影響を述べてください。",
+                "min_characters": 1000
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】1年目の展望",
+                "instruction": "{transit_year1_events}に基づき、1年目に予想される展開を物語形式で描写してください。具体的な時期（月）を含めてください。",
+                "min_characters": 700
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】2年目の展望",
+                "instruction": "{transit_year2_events}に基づき、2年目に予想される展開を物語形式で描写してください。",
+                "min_characters": 700
+              },
+              {
+                "block": "scenario",
+                "title": "【シナリオ】3年目の展望",
+                "instruction": "{transit_year3_events}に基づき、3年目に予想される展開を物語形式で描写してください。",
+                "min_characters": 700
+              },
+              {
+                "block": "action",
+                "title": "【提言とワーク】戦略的行動計画",
+                "instruction": "今後3年間を見据えた戦略的な行動計画を、年度別に提案してください。",
+                "min_characters": 500
+              }
+            ]
+          }
+        },
+        {
+          "step_id": "6-C",
+          "chapter_number": "エピローグ",
+          "chapter_title": "CEOへの手紙",
+          "target_characters": 2500,
+          "static_content": {
+            "theory": {
+              "title": "【締めくくりに寄せて】",
+              "text": "ここまで、あなたの出生図を「人生経営の設計図」として詳細に分析してきました。\n\n4元素のバランスから始まり、内なる経営チーム（太陽・月・水星・金星・火星）、社会との関わり（木星・土星）、変革のエネルギー（天王星・海王星・冥王星）、独自の使命（カイロン・ドラゴンヘッド）、そしてビジネスモデル（2・6・10ハウス）と未来予測（プログレス・トランジット）を見てきました。\n\nこの鑑定書は、あなたという「会社」の取扱説明書です。しかし、説明書を読んだだけでは何も変わりません。実際に行動を起こし、経営判断を下し、軌道修正を繰り返すことで、初めて人生という事業は前に進みます。"
+            }
+          },
+          "dynamic_prompt": {
+            "instruction": "これまでの全章の分析を踏まえ、この人のCEO（太陽）に向けた手紙を書いてください。人物像サマリーと各章の要点を統合し、励ましと具体的なアクションを含めてください。",
+            "variables_required": [
+              "user_profile_summary",
+              "key_strengths",
+              "key_challenges",
+              "recommended_focus_areas"
+            ],
+            "output_structure": [
+              {
+                "block": "letter",
+                "title": "【CEOへの手紙】",
+                "instruction": "この人の太陽（CEO）に向けた、パーソナライズされた手紙を書いてください。これまでの分析で明らかになった強み、課題、そして今後の方向性を統合し、温かくも的確なアドバイスを含めてください。手紙形式で、冒頭は「親愛なる[太陽のサイン]のCEOへ」で始めてください。",
+                "min_characters": 1500
+              },
+              {
+                "block": "action",
+                "title": "【最終提言】今日から始める3つのこと",
+                "instruction": "この鑑定書を読み終えた今日から始められる、具体的な3つのアクションを提案してください。",
+                "min_characters": 500
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+
+  "user_profile_template": {
+    "description": "Step 2終了時に生成し、以降全セッションで参照する人物プロファイル",
+    "generation_trigger": "step_2-A_completion",
+    "max_characters": 500,
+    "structure": {
+      "dominant_traits": "4元素・3区分から導かれる基本特性",
+      "core_drives": "太陽・月から読み取れる動機",
+      "communication_style": "水星・金星から読み取れるスタイル",
+      "action_pattern": "火星から読み取れる行動パターン",
+      "growth_direction": "ドラゴンヘッドが示す成長方向"
+    }
+  },
+
+  "bridging_sentences": {
+    "description": "各ステップ間の接続を滑らかにする橋渡し文",
+    "opening_template": "前章では{previous_topic}について見てきました。本章では、{current_topic}に焦点を当てます。",
+    "closing_template": "次章では、この{current_topic}がどのように{next_topic}と関連するかを探っていきます。",
+    "chapter_transitions": {
+      "1-A_to_1-B": {
+        "closing": "4元素というマクロの視点から、次は3区分とアングルという、より具体的な行動パターンの分析に進みます。",
+        "opening": "4元素のバランスで全体像を掴んだところで、次は3区分（活動宮・固定宮・柔軟宮）と4つのアングルを見ていきましょう。"
+      },
+      "1-B_to_2-A": {
+        "closing": "アングルという人生の基軸を確認したところで、次はその基軸上で活躍する「役員たち」を紹介します。",
+        "opening": "さて、ここからはあなたの「内なる経営チーム」の顔ぶれを見ていきます。まずはCEOとCFOにあたる太陽と月です。"
+      }
+    }
+  },
+
+  "error_handling": {
+    "missing_birth_time": {
+      "default_time": "12:00",
+      "warning_message": "出生時間が不明なため、正午（12:00）を仮定して計算しています。ハウスとアングルの解釈は参考程度にお考えください。",
+      "affected_sections": ["angles", "houses", "progressed_moon"]
+    },
+    "api_failure": {
+      "retry_count": 3,
+      "fallback_message": "一時的なエラーが発生しました。しばらくしてから再度お試しください。"
+    },
+    "character_count_failure": {
+      "max_retry": 2,
+      "minimum_acceptable": 2000
+    }
+  },
+
+  "pdf_settings": {
+    "page_size": "A4",
+    "margins": {
+      "top": 25,
+      "bottom": 25,
+      "left": 20,
+      "right": 20
+    },
+    "fonts": {
+      "title": "NotoSansJP-Bold",
+      "heading": "NotoSansJP-Medium",
+      "body": "NotoSansJP-Regular"
+    },
+    "header": {
+      "text": "Strategic Life Navigation System | Anti-Gravity",
+      "show_page_number": true
+    },
+    "table_of_contents": true,
+    "cover_page": {
+      "title": "人生経営戦略書",
+      "subtitle": "Strategic Life Navigation System",
+      "include_birth_data": true,
+      "include_generation_date": true
+    }
+  }
+}

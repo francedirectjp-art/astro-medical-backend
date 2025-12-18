@@ -718,10 +718,17 @@ async def generate_session_pdf(session_id: str):
         # PDFをメモリバッファに生成
         pdf_buffer = generate_pdf_to_buffer(session, MASTER_CONTENT)
         
-        # ファイル名を生成
+        # ファイル名を生成（日本語対応）
         name = session.get('birth_data', {}).get('name', 'user')
         timestamp = datetime.now().strftime("%Y%m%d")
-        filename = f"anti_gravity_{name}_{timestamp}.pdf"
+        
+        # ASCII安全なファイル名と、UTF-8エンコードされたファイル名の両方を提供
+        filename_ascii = f"anti_gravity_{timestamp}.pdf"
+        filename_utf8 = f"anti_gravity_{name}_{timestamp}.pdf"
+        
+        # RFC 5987 に準拠したファイル名エンコーディング
+        import urllib.parse
+        encoded_filename = urllib.parse.quote(filename_utf8.encode('utf-8'))
         
         logger.info(f"PDF generated for session {session_id}")
         
@@ -729,7 +736,7 @@ async def generate_session_pdf(session_id: str):
             pdf_buffer,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"'
+                "Content-Disposition": f"attachment; filename=\"{filename_ascii}\"; filename*=UTF-8''{encoded_filename}"
             }
         )
         

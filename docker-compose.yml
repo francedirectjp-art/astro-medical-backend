@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Backend API Server
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anti-gravity-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # OpenAI API (optional)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Google Gemini API (optional)
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      # Python environment
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount output directory for PDFs
+      - ./output:/app/output
+      # Mount swe_data for updates
+      - ./swe_data:/app/swe_data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - anti-gravity-network
+
+  # Frontend Next.js Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: anti-gravity-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - anti-gravity-network
+
+networks:
+  anti-gravity-network:
+    driver: bridge
+
+volumes:
+  output:
+    driver: local

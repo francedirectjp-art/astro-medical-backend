@@ -1,183 +1,273 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import BirthDataForm from '@/components/BirthDataForm';
-import type { BirthData } from '@/types';
+import ProgressBar from '@/components/ProgressBar';
+import ContentDisplay from '@/components/ContentDisplay';
 import api from '@/lib/api';
-import { storage } from '@/lib/utils';
+import type { BirthData, SessionResponse, StepContent, SessionInfo } from '@/types';
+
+type AppState = 'input' | 'processing' | 'generating' | 'complete';
 
 export default function Home() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [state, setState] = useState<AppState>('input');
+  const [session, setSession] = useState<SessionResponse | null>(null);
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [currentContent, setCurrentContent] = useState<StepContent | null>(null);
+  const [totalCharacters, setTotalCharacters] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Get all steps from sessions
+  const allSteps = sessions.flatMap(s => s.steps);
 
   const handleSubmit = async (birthData: BirthData) => {
     setLoading(true);
     setError(null);
+    setState('processing');
 
     try {
-      // Create session with birth data
-      const response = await api.createSession(birthData);
-      
-      // Save session ID to local storage
-      storage.set('current_session_id', response.session_id);
-      storage.set(`session_${response.session_id}`, {
-        birthData,
-        chartData: response.chart_data,
-        createdAt: new Date().toISOString(),
-      });
+      // Create session
+      const sessionResponse = await api.createSession(birthData);
+      setSession(sessionResponse);
 
-      // Navigate to generation page
-      router.push(`/generate/${response.session_id}`);
+      // Get session structure
+      const structure = await api.getSessionsStructure();
+      setSessions(structure);
+
+      // Move to generating state
+      setState('generating');
+      setLoading(false);
+
+      // Start generating first step automatically
+      await generateNextStep(sessionResponse.session_id, structure);
     } catch (err: any) {
       console.error('Session creation failed:', err);
-      setError(
-        err.response?.data?.detail || 
-        'セッションの作成に失敗しました。もう一度お試しください。'
-      );
+      setError(err.response?.data?.detail || err.message || '処理中にエラーが発生しました');
+      setLoading(false);
+      setState('input');
+    }
+  };
+
+  const generateNextStep = async (sessionId: string, structure: SessionInfo[]) => {
+    const allSteps = structure.flatMap(s => s.steps);
+    
+    if (currentStepIndex >= allSteps.length) {
+      setState('complete');
+      return;
+    }
+
+    const step = allSteps[currentStepIndex];
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Generate step content
+      const content = await api.generateStep(sessionId, step.step_id);
+      setCurrentContent(content);
+      setCompletedSteps(prev => [...prev, step.step_id]);
+      setTotalCharacters(prev => prev + (content.character_count || 0));
+      setLoading(false);
+
+    } catch (err: any) {
+      console.error('Step generation failed:', err);
+      setError(err.response?.data?.detail || err.message || 'コンテンツ生成中にエラーが発生しました');
+      setLoading(false);
+    }
+  };
+
+  const handleNextStep = () => {
+    if (currentStepIndex < allSteps.length - 1) {
+      setCurrentStepIndex(prev => prev + 1);
+      setCurrentContent(null);
+      if (session) {
+        generateNextStep(session.session_id, sessions);
+      }
+    } else {
+      setState('complete');
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!session) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const pdfBlob = await api.downloadPDF(session.session_id);
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `anti_gravity_${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setLoading(false);
+    } catch (err: any) {
+      console.error('PDF download failed:', err);
+      setError(err.response?.data?.detail || err.message || 'PDF生成中にエラーが発生しました');
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container-custom py-6">
-          <h1 className="text-3xl font-bold text-anti-gravity-dark">
-            Anti-Gravity
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Strategic Life Navigation System
-          </p>
-        </div>
-      </header>
-
+    <div className="space-y-8">
       {/* Hero Section */}
-      <section className="container-custom py-12">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="text-4xl font-bold text-anti-gravity-dark mb-4">
-            占星術人生経営戦略書
-          </h2>
-          <p className="text-lg text-gray-600 leading-relaxed">
-            あなたの出生データから、MBAホルダーの人生経営戦略コンサルタントが<br />
-            約50,000文字の超長編鑑定書を作成します
-          </p>
+      <div className="text-center py-12 animate-fade-in">
+        <h2 className="text-4xl font-bold text-anti-gravity-dark mb-4">
+          人生経営戦略書
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          あなたの出生図を「人生経営の設計図」として読み解き、
+          <br />
+          約50,000文字の包括的な戦略書を作成します。
+        </p>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 animate-slide-up">
+          <div className="flex items-center">
+            <svg
+              className="w-5 h-5 text-red-500 mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <p className="text-red-800">{error}</p>
+          </div>
         </div>
+      )}
 
-        {/* Main Form Card */}
-        <div className="max-w-2xl mx-auto">
-          <div className="card">
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-anti-gravity-primary mb-2">
-                出生データ入力
-              </h3>
-              <p className="text-sm text-gray-600">
-                正確な鑑定のため、できる限り正確な情報をご入力ください
-              </p>
-            </div>
+      {/* Input State */}
+      {state === 'input' && (
+        <BirthDataForm onSubmit={handleSubmit} loading={loading} />
+      )}
 
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-800">{error}</p>
+      {/* Processing State */}
+      {state === 'processing' && (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-lg text-gray-600">ホロスコープを計算中...</p>
+        </div>
+      )}
+
+      {/* Generating State */}
+      {state === 'generating' && (
+        <div className="space-y-6">
+          <ProgressBar
+            current={completedSteps.length}
+            total={allSteps.length}
+            currentStep={allSteps[currentStepIndex]?.chapter_title}
+            totalCharacters={totalCharacters}
+          />
+
+          {currentContent && (
+            <>
+              <ContentDisplay content={currentContent} />
+
+              <div className="flex justify-center space-x-4">
+                {currentStepIndex < allSteps.length - 1 ? (
+                  <button
+                    onClick={handleNextStep}
+                    disabled={loading}
+                    className="px-8 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all active:scale-95"
+                  >
+                    {loading ? '生成中...' : '次のステップへ'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setState('complete')}
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all active:scale-95"
+                  >
+                    完了して確認する
+                  </button>
+                )}
               </div>
-            )}
+            </>
+          )}
 
-            <BirthDataForm 
-              onSubmit={handleSubmit} 
-              loading={loading}
-            />
+          {loading && !currentContent && (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+              <p className="mt-4 text-lg text-gray-600">コンテンツ生成中...</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Complete State */}
+      {state === 'complete' && session && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+            <svg
+              className="w-16 h-16 text-green-500 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="text-2xl font-bold text-green-800 mb-2">
+              鑑定書の作成が完了しました！
+            </h3>
+            <p className="text-green-700">
+              総文字数: {totalCharacters.toLocaleString()} 文字
+            </p>
           </div>
 
-          {/* Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <div className="card text-center">
-              <div className="text-3xl mb-2">📊</div>
-              <h4 className="font-bold text-anti-gravity-primary mb-1">
-                15ステップ
-              </h4>
-              <p className="text-xs text-gray-600">
-                詳細な分析
-              </p>
-            </div>
-            <div className="card text-center">
-              <div className="text-3xl mb-2">📝</div>
-              <h4 className="font-bold text-anti-gravity-primary mb-1">
-                50,000文字
-              </h4>
-              <p className="text-xs text-gray-600">
-                超長編レポート
-              </p>
-            </div>
-            <div className="card text-center">
-              <div className="text-3xl mb-2">📄</div>
-              <h4 className="font-bold text-anti-gravity-primary mb-1">
-                PDFダウンロード
-              </h4>
-              <p className="text-xs text-gray-600">
-                電子書籍品質
-              </p>
-            </div>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={handleDownloadPDF}
+              disabled={loading}
+              className="px-8 py-4 bg-primary-600 text-white rounded-lg font-medium text-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center"
+            >
+              <svg
+                className="w-6 h-6 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                />
+              </svg>
+              {loading ? 'PDF生成中...' : 'PDFをダウンロード'}
+            </button>
+
+            <button
+              onClick={() => {
+                setState('input');
+                setSession(null);
+                setCurrentStepIndex(0);
+                setCompletedSteps([]);
+                setCurrentContent(null);
+                setTotalCharacters(0);
+              }}
+              className="px-8 py-4 bg-gray-600 text-white rounded-lg font-medium text-lg hover:bg-gray-700 transition-all active:scale-95"
+            >
+              新しい鑑定を開始
+            </button>
           </div>
         </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="bg-white py-16 mt-12">
-        <div className="container-custom">
-          <h3 className="text-2xl font-bold text-center text-anti-gravity-dark mb-12">
-            システムの特徴
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🎯</div>
-              <h4 className="font-bold text-anti-gravity-primary mb-2">
-                正確な天体計算
-              </h4>
-              <p className="text-sm text-gray-600">
-                Swiss Ephemerisによる精密な計算
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">🤖</div>
-              <h4 className="font-bold text-anti-gravity-primary mb-2">
-                AI分析
-              </h4>
-              <p className="text-sm text-gray-600">
-                GPT-4o/Geminiによる高度な解釈
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">💼</div>
-              <h4 className="font-bold text-anti-gravity-primary mb-2">
-                経営的視点
-              </h4>
-              <p className="text-sm text-gray-600">
-                MBAホルダーの戦略的アドバイス
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">📖</div>
-              <h4 className="font-bold text-anti-gravity-primary mb-2">
-                6ブロック執筆
-              </h4>
-              <p className="text-sm text-gray-600">
-                理論・分析・シナリオ・提言
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-anti-gravity-dark text-white py-8 mt-16">
-        <div className="container-custom text-center">
-          <p className="text-sm text-gray-400">
-            © 2024 Anti-Gravity | Strategic Life Navigation System
-          </p>
-        </div>
-      </footer>
-    </main>
+      )}
+    </div>
   );
 }

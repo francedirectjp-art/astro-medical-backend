@@ -912,6 +912,51 @@ async def test_ai_generation(
 
 # =============================================================================
 # メイン実行
+
+# =============================================================================
+# GEM 自動生成（Claude Sonnet）— NEXUS OS 連携
+# プロンプト本文(IP)とAPIキーは環境変数。コードには含めない。
+# =============================================================================
+
+class GemGenerateRequest(BaseModel):
+    gem: str = Field("gem1", description="gem1|gem2|gem3")
+    input: str = Field(..., description="顧客データ/引き継ぎ等の入力")
+    model: str = Field("claude-sonnet-4-6", description="Claude model id")
+    max_tokens: int = Field(8000, ge=256, le=32000)
+
+_GEM_ENV = {"gem1": "GEM1_PROMPT", "gem2": "GEM2_PROMPT", "gem3": "GEM3_PROMPT"}
+
+@app.post("/api/gem/generate")
+async def gem_generate(req: GemGenerateRequest):
+    import os
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    if not key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+    env_name = _GEM_ENV.get(req.gem)
+    system_prompt = os.environ.get(env_name) if env_name else None
+    if not system_prompt:
+        raise HTTPException(status_code=400, detail=f"prompt for {req.gem} not configured")
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=key)
+        msg = client.messages.create(
+            model=req.model,
+            max_tokens=req.max_tokens,
+            system=system_prompt,
+            messages=[{"role": "user", "content": req.input}],
+        )
+        text = "".join(getattr(b, "text", "") for b in msg.content)
+        usage = getattr(msg, "usage", None)
+        return {
+            "content": text,
+            "model": req.model,
+            "input_tokens": getattr(usage, "input_tokens", None),
+            "output_tokens": getattr(usage, "output_tokens", None),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # =============================================================================
 
 if __name__ == "__main__":

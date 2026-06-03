@@ -932,10 +932,10 @@ async def gem_generate(req: GemGenerateRequest):
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
-    env_name = _GEM_ENV.get(req.gem)
-    system_prompt = os.environ.get(env_name) if env_name else None
+    env_name = f"{req.gem.upper()}_PROMPT"  # gem1->GEM1_PROMPT, kantei->KANTEI_PROMPT
+    system_prompt = os.environ.get(env_name)
     if not system_prompt:
-        raise HTTPException(status_code=400, detail=f"prompt for {req.gem} not configured")
+        raise HTTPException(status_code=400, detail=f"prompt for {req.gem} ({env_name}) not configured")
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=key)

@@ -939,14 +939,17 @@ async def gem_generate(req: GemGenerateRequest):
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=key)
-        msg = client.messages.create(
+        text = ""
+        with client.messages.stream(
             model=req.model,
             max_tokens=req.max_tokens,
             system=system_prompt,
             messages=[{"role": "user", "content": req.input}],
-        )
-        text = "".join(getattr(b, "text", "") for b in msg.content)
-        usage = getattr(msg, "usage", None)
+        ) as stream:
+            for chunk in stream.text_stream:
+                text += chunk
+            final = stream.get_final_message()
+        usage = getattr(final, "usage", None)
         return {
             "content": text,
             "model": req.model,
